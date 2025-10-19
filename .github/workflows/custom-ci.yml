@@ -37,9 +37,16 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Step 6: Run security audit (does not fail workflow)
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate || true
+      # Step 6: Run security audit and save report
+      - name: Save npm audit report
+        run: npm audit --json > audit-report.json || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: audit-report.json
+
 
       # Step 7: Save audit report
       - name: Save npm audit report
