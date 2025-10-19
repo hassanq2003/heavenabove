@@ -45,17 +45,19 @@ jobs:
           npm run build --if-present
           echo "Build completed"
 
-      # 7️⃣ Copy static data (your satellite/Iridium files)
+      # 7️⃣ Copy static data
       - name: Copy data to build folder
         run: |
-          xcopy public\data\* build\ /s /y || echo "No data to copy"
+          mkdir -p build
+          cp -r public/data/* build/ || echo "No data to copy"
 
       # 8️⃣ Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v6.5.1
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
           user_name: github-actions
           user_email: github-actions@github.com
           keep_files: false
+
