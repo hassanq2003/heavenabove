@@ -30,15 +30,24 @@ jobs:
           CI: true
         run: |
           echo "Running tests..."
-          npm test -- --verbose || true
+          mkdir -p test-results
+          npm test -- --verbose --coverage --coverageDirectory=test-results || true
 
       - name: Build project (if build script exists)
         run: npm run build --if-present
 
       - name: Upload Jest test results
-        if: always()
+        if: ${{ steps.check-results.outputs.exists == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: jest-test-results-${{ github.run_id }}
           path: test-results/
-          if-no-files-found: ignore
+
+      - name: Check if test-results folder is not empty
+        id: check-results
+        run: |
+          if [ -d "test-results" ] && [ "$(ls -A test-results)" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
