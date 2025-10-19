@@ -2,80 +2,44 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
-  test:
-    name: Run Tests and Checks
+  build-and-test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Check for syntax errors
-      run: |
-        node -c run.js
-        # Check all .js files for syntax errors
-        find . -name "*.js" -not -path "./node_modules/*" -exec node -c {} \; || true
-    
-    - name: Verify dependencies
-      run: |
-        npm list
-        echo "All dependencies installed successfully"
-    
-    - name: Security audit
-      run: npm audit --audit-level moderate || true
-    
-    - name: Run basic functionality test
-      run: |
-        # Test that the main script can be required without errors
-        node -e "require('./run.js'); console.log('Script loaded successfully')"
-    
-    - name: Check code style
-      run: |
-        # Basic code quality checks
-        echo "Checking for large files..."
-        find . -name "*.js" -not -path "./node_modules/*" -size +100k | wc -l | awk '{if ($1 > 0) {print "Found large JS files"; exit 1}}' || echo "No overly large JS files found"
+        node-version: [18.x, 20.x] # test on multiple Node versions
 
-  validate:
-    name: Validate Project Structure
-    runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Check required files
-      run: |
-        if [ ! -f "run.js" ]; then
-          echo "❌ Missing main script: run.js"
-          exit 1
-        fi
-        if [ ! -f "package.json" ]; then
-          echo "❌ Missing package.json"
-          exit 1
-        fi
-        echo "✅ All required files present"
-    
-    - name: Check Node.js version compatibility
-      run: |
-        REQUIRED_NODE=$(node -e "console.log(require('./package.json').engines.node)")
-        echo "Required Node.js version: $REQUIRED_NODE"
-        CURRENT_NODE=$(node --version)
-        echo "Current Node.js version: $CURRENT_NODE"
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Run linting
+        run: npm run lint
+        continue-on-error: false  # fails build if linting fails
+
+      - name: 🧪 Run tests
+        run: npm test
+
+      - name: ✅ Build project (if applicable)
+        run: npm run build --if-present
+
+      - name: 📊 Upload test results (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
