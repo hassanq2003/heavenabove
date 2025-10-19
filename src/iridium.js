@@ -21,7 +21,7 @@ const eventsIridium = [
   "id",
 ];
 
-// Unified request helper for mocking
+// Unified request helper
 function request(options, callback) {
   if (!options || !options.url) return callback(new Error("Invalid URL"));
   axios
@@ -30,25 +30,22 @@ function request(options, callback) {
     .catch((err) => callback(err));
 }
 
+// Main function to get Iridium flares
 function getTable(config) {
-  let database = config.database || [];
-  let counter = config.counter || 0;
-  const opt = config.opt || 0;
-  const basedir = config.root + "IridiumFlares/";
+  return new Promise((resolve, reject) => {
+    let database = config.database || [];
+    const basedir = config.root + "IridiumFlares/";
+    const counter = config.counter || 0;
+    const opt = config.opt || 0;
 
-  let options;
-  if (counter === 0) {
-    options = utils.get_options("IridiumFlares.aspx?");
-    if (!fs.existsSync(basedir)) {
-      fs.mkdir(basedir, (err) => err && console.log(err));
-    }
-  } else {
-    options = utils.post_options("IridiumFlares.aspx?", opt);
-  }
+    if (!fs.existsSync(basedir)) fs.mkdirSync(basedir, { recursive: true });
 
-  try {
-    request(options, (error, response, body) => {
-      if (error || response.statusCode !== 200) return;
+    const options = counter === 0
+      ? utils.get_options("IridiumFlares.aspx?")
+      : utils.post_options("IridiumFlares.aspx?", opt);
+
+    request(options, async (error, response, body) => {
+      if (error || response.statusCode !== 200) return reject(error);
 
       const $ = cheerio.load(body, { decodeEntities: false });
       const tbody = $("form").find("table.standardTable tbody");
@@ -56,29 +53,22 @@ function getTable(config) {
 
       tbody.find("tr").each((i, o) => {
         const temp = {};
-
         for (let j = 0; j < 6; j++) {
           temp[eventsIridium[j]] = $(o).find("td").eq(j + 1).text().trim();
         }
-
         const href = $(o).find("td").eq(0).find("a").attr("href");
-        if (href && href.includes("type=")) {
-          temp.url =
-            "https://www.heavens-above.com/" + href.replace("type=V", "type=A");
-        } else {
-          temp.url = "https://www.heavens-above.com/IridiumFlares.aspx"; // fallback
-        }
+        temp.url = href
+          ? "https://www.heavens-above.com/" + href.replace("type=V", "type=A")
+          : "https://www.heavens-above.com/IridiumFlares.aspx";
 
         queue.push(temp);
       });
 
-      function factory(temp) {
-        return new Promise((resolve) => {
-          request(utils.iridium_options(temp.url), (error, response, body) => {
-            if (error || response.statusCode !== 200) {
-              resolve(temp);
-              return;
-            }
+      // Fetch detailed flare data
+      async function factory(temp) {
+        return new Promise((res) => {
+          request(utils.iridium_options(temp.url), (err, resp, body) => {
+            if (err || resp.statusCode !== 200) return res(temp);
 
             const $ = cheerio.load(body, { decodeEntities: false });
             const table = $("form").find("table.standardTable");
@@ -97,42 +87,37 @@ function getTable(config) {
             });
 
             const imgSrc = $("#ctl00_cph1_imgSkyChart").attr("src");
-            if (imgSrc) {
-              temp[eventsIridium[13]] = "https://www.heavens-above.com/" + imgSrc;
-            }
+            if (imgSrc) temp[eventsIridium[13]] = "https://www.heavens-above.com/" + imgSrc;
 
             const id = utils.md5(Math.random().toString());
             temp[eventsIridium[14]] = id;
 
-            fs.appendFile(basedir + id + ".html", table.html(), (err) => err && console.log(err));
+            fs.appendFileSync(basedir + id + ".html", table.html());
 
             if (temp[eventsIridium[13]]) {
               const imgOpts = utils.image_options(temp[eventsIridium[13]]);
               axios
                 .get(imgOpts.url, { responseType: "stream" })
-                .then((res) => {
-                  res.data
-                    .pipe(fs.createWriteStream(basedir + id + ".png", { flags: "a" }))
-                    .on("error", console.error);
+                .then((resStream) => {
+                  resStream.data.pipe(fs.createWriteStream(basedir + id + ".png", { flags: "a" }));
                 })
                 .catch(console.error);
             }
 
-            resolve(temp);
+            res(temp);
           });
         });
       }
 
-      Promise.allSettled(queue.map((temp) => factory(temp))).then((results) => {
-        results = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
-        database = database.concat(results);
-      });
+      await Promise.all(queue.map(factory));
+      database = database.concat(queue);
+      resolve(database);
     });
-  } catch (err) {
-    console.error("Error fetching page:", err.message);
-  }
+  });
 }
 
-exports.getTable = getTable;
-exports.eventsIridium = eventsIridium;
-exports.request = request;
+module.exports = {
+  getTable,
+  eventsIridium,
+  request,
+};
