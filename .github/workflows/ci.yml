@@ -33,9 +33,6 @@ jobs:
           mkdir -p test-results
           npm test -- --verbose --coverage --coverageDirectory=test-results || true
 
-      - name: Build project (if build script exists)
-        run: npm run build --if-present
-
       - name: Upload Jest test results
         if: ${{ steps.check-results.outputs.exists == 'true' }}
         uses: actions/upload-artifact@v4
