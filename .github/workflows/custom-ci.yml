@@ -1,0 +1,51 @@
+name: Custom CI Workflow
+
+# Trigger on push, pull request, or manual dispatch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lint-test-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run linter
+      - name: Lint code
+        run: npm run lint || true
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: npm test
+
+      # Step 6: Run security audit (does not fail workflow)
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate || true
+
+      # Step 7: Save audit report
+      - name: Save npm audit report
+        run: npm audit --json > audit-report.json
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: audit-report.json
