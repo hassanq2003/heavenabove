@@ -47,7 +47,7 @@ jobs:
         run: npm install
 
       - name: SonarCloud Scan
-        uses: sonarsource/sonarqube-scan-action@2d08c9f48b3e85fbe32e4dbe1f6a34b5f879a8b8  # Full commit SHA
+        uses: sonarsource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
