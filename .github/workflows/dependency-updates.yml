@@ -43,13 +43,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # Step 7: Commit and push changes if any
-      - name: Commit updated dependencies
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json -f
-          git diff --staged --quiet || git commit -m "Automated dependency update"
-          git push origin HEAD:main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: Automated dependency update
+          branch: dependency-updates
+          title: Automated dependency update
+          body: This PR updates project dependencies.
+
