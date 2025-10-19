@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Deploy only on push to main
+  workflow_dispatch:   # Allow manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      # 4️⃣ Build the project (adjust your build folder)
+      - name: Build project
+        run: npm run build --if-present
+
+      # 5️⃣ Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build    # <-- Change this to your build folder (dist/build)
+          user_name: github-actions
+          user_email: github-actions@github.com
+          keep_files: false
