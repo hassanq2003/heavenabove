@@ -3,9 +3,9 @@ name: Dependency Updates
 on:
   schedule:
     # Runs weekly on Monday at 02:00 UTC
-    - cron: "0 2 * * *"
+    - cron: "0 2 * * 1"
   workflow_dispatch: # allows manual triggering
-  pull_request: # triggers workflow on PRs (optional)
+  pull_request:
   push:
     branches:
       - main
@@ -15,9 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
+      # Step 1: Checkout repository with token
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 2: Setup Node.js
       - name: Setup Node.js
@@ -46,7 +48,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Force-add package-lock.json in case it's ignored
           git add package.json package-lock.json -f
           git diff --staged --quiet || git commit -m "Automated dependency update"
-          git push origin main
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
