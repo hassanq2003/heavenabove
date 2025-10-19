@@ -1,9 +1,11 @@
 const crypto = require('crypto');
 
 function getTimestamp(time) {
-	const arr = time.split(":");
-	return parseInt(arr[0]) * 3600 + parseInt(arr[1]) * 60 + parseInt(arr[2]);
+  const parts = time.split(':').map(Number);
+  const [h, m, s = 0] = parts; // default seconds to 0 if missing
+  return h * 3600 + m * 60 + s;
 }
+
 
 function post_options(target, opt) {
 	return {

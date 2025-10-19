@@ -5,14 +5,26 @@
   "description": "Scripts for scraping the Heavens Above website.",
   "main": "run.js",
   "scripts": {
-    "start": "node run.js"
+    "start": "node run.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:utils": "jest test/utils.test.js",
+    "test:satellite": "jest test/satellite.test.js",
+    "test:iridium": "jest test/iridium.test.js",
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix"
   },
   "dependencies": {
     "axios": "^1.12.2",
     "cheerio": "^1.0.0-rc.3",
-    "node-fetch": "^3.3.2",
     "request": "^2.88.2",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
   },
   "repository": {
     "type": "git",
@@ -30,5 +42,22 @@
   "homepage": "https://github.com/PKUPI/heavens-above#readme",
   "engines": {
     "node": ">=12.10.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "*.js",
+      "!node_modules/**",
+      "!test/**"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testMatch": [
+      "**/test/**/*.test.js"
+    ]
   }
 }
