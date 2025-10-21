@@ -7,7 +7,7 @@ on:
       - 'my-docs/docs/**'      # triggers only when docs change
       - 'my-docs/docusaurus.config.js'
       - 'my-docs/package.json'
-      - '.github/workflows/deploy-docs.yml'  # (optional) re-run if workflow changes
+      - '.github/workflows/documentation.yml'  # (optional) re-run if workflow changes
 
 permissions:
   contents: write  # required for deployment to gh-pages
