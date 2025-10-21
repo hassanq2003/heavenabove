@@ -1,0 +1,46 @@
+name: Build and Deploy Docusaurus Documentation
+
+on:
+  push:
+    branches: [ main ]  
+    paths:
+      - 'my-docs/docs/**'      # triggers only when docs change
+      - 'my-docs/docusaurus.config.js'
+      - 'my-docs/package.json'
+      - '.github/workflows/deploy-docs.yml'  # (optional) re-run if workflow changes
+
+permissions:
+  contents: write  # required for deployment to gh-pages
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensures full history (required for versioning)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd my-docs
+          npm ci
+
+      - name: Build Docusaurus site
+        run: |
+          cd my-docs
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./my-docs/build
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
