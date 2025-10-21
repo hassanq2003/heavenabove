@@ -8,6 +8,7 @@ on:
       - 'my-docs/docusaurus.config.js'
       - 'my-docs/package.json'
       - '.github/workflows/documentation.yml'  # (optional) re-run if workflow changes
+  workflow_dispatch:
 
 permissions:
   contents: write  # required for deployment to gh-pages
