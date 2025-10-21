@@ -2,17 +2,17 @@ name: Build and Deploy Docusaurus Documentation
 
 on:
   push:
-    branches: [ main ]  # change if your default branch is different
+    branches: [ main ]  # or your default branch
     paths:
-      - 'my-docs/docs/**'                # trigger only when docs change
-      - 'my-docs/docusaurus.config.js'   # rebuild if config changes
-      - 'my-docs/package.json'           # rebuild if dependencies change
-      - '.github/workflows/documentation.yml' # rerun if workflow changes
+      - 'my-docs/docs/**'
+      - 'my-docs/docusaurus.config.js'
+      - 'my-docs/package.json'
+      - '.github/workflows/documentation.yml'
 
-  workflow_dispatch:  # 👈 allows manual trigger from GitHub Actions tab
+  workflow_dispatch:  # 👈 allows manual trigger from GitHub UI
 
 permissions:
-  contents: write  # required to deploy to gh-pages
+  contents: write
 
 jobs:
   deploy:
@@ -22,17 +22,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # full git history for Docusaurus versioning if used later
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20  # 👈 upgraded to Node.js 20 (Docusaurus requirement)
 
       - name: Install dependencies
         run: |
           cd my-docs
-          # Try npm ci if lockfile exists, else fallback to npm install
+          # Try npm ci if lockfile exists, otherwise fallback to npm install
           if [ -f package-lock.json ]; then
             npm ci
           else
