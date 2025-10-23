@@ -2,10 +2,11 @@
   "name": "heavens-above",
   "version": "1.0.0",
   "private": true,
-  "description": "Scripts for scraping the Heavens Above website.",
-  "main": "run.js",
+  "description": "Web application for fetching and displaying satellite data from Heavens Above.",
+  "main": "server.js",
   "scripts": {
-    "start": "node run.js",
+    "start": "node server.js",
+    "fetch-data": "node run.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -15,12 +16,12 @@
     "test:iridium": "jest test/iridium.test.js",
     "lint": "eslint *.js",
     "lint:fix": "eslint *.js --fix",
-    "build": "node run.js && mkdir -p build && xcopy public\\data\\* build\\ /s /y"
-
+    "build": "npm run fetch-data && mkdir -p build && cp -r public/* build/"
   },
   "dependencies": {
     "axios": "^1.12.2",
     "cheerio": "^1.0.0-rc.10",
+    "express": "^5.1.0",
     "request": "^2.88.2",
     "uuid": "^13.0.0"
   },
@@ -34,16 +35,19 @@
   },
   "keywords": [
     "Heavens Above",
-    "spider"
+    "satellite",
+    "iridium",
+    "web app",
+    "node"
   ],
-  "author": "Mimi <stevenjoezhang@gmail.com> (https://zhangshuqiao.org)",
+  "author": "Hassan Qureshi <your.email@example.com>",
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/PKUPI/heavens-above/issues"
   },
   "homepage": "https://github.com/PKUPI/heavens-above#readme",
   "engines": {
-    "node": ">=12.10.0"
+    "node": ">=18.0.0"
   },
   "jest": {
     "testEnvironment": "node",
@@ -61,5 +65,8 @@
     "testMatch": [
       "**/test/**/*.test.js"
     ]
+  },
+  "directories": {
+    "test": "test"
   }
 }
