@@ -8,13 +8,14 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  workflow_dispatch:   # ✅ allows manual deployment triggers from GitHub UI
+  workflow_dispatch: # ✅ allows manual deployment triggers from GitHub UI
 
 jobs:
   build_and_test_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Test Job
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -25,14 +26,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # or your preferred version
+          node-version: '20' # ✅ Node 20 fixes Undici/File issues
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci # ✅ faster and cleaner than npm install for CI
 
       - name: Run tests
         run: npm test
-        continue-on-error: true # Optional — allows deploy to continue even if tests fail
+        continue-on-error: true # Optional — allows deploy even if tests fail
 
       - name: Build application
         run: npm run build
@@ -41,12 +42,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-build
-          path: build-web # or .next/out/dist folder depending on your framework
+          path: build-web # or `.next`, `dist`, or `out` depending on your framework
 
   deploy_job:
     needs: build_and_test_job
     runs-on: ubuntu-latest
     name: Deploy to Azure Static Web Apps
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -62,18 +64,20 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_GLACIER_02B211400 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # GitHub integration (PR comments, etc.)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
+
           ###### Repository/Build Configurations ######
-          app_location: "/public" # folder containing your app (adjust if Next.js or React)
-          api_location: "api" # optional
-          output_location: "build-web" # folder with built content
+          app_location: "/" # ✅ Root directory (change if your app is in /src or /public)
+          api_location: "api" # Optional — for serverless API routes
+          output_location: "build-web" # Built app directory (Next.js = `.next`, React = `build`)
           ###### End of Configurations ######
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
+
     steps:
       - name: Close Pull Request
         uses: Azure/static-web-apps-deploy@v1
