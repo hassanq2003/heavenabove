@@ -9,7 +9,7 @@ on:
       - 'my-docs/package.json'
       - '.github/workflows/documentation.yml'
 
-  workflow_dispatch:  # 👈 allows manual trigger from GitHub UI
+  workflow_dispatch:  
 
 permissions:
   contents: write
