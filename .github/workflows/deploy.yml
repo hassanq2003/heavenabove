@@ -8,78 +8,38 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  workflow_dispatch: # ✅ Allows manual deployment triggers from GitHub UI
 
 jobs:
-  build_and_test_job:
+  build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    name: Build and Test Job
-
+    name: Build and Deploy Job
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # ✅ Node 20 fixes Undici/File issues
-
-      - name: Install dependencies
-        run: npm ci # ✅ faster and more consistent than npm install in CI
-
-      - name: Run tests
-        run: npm test
-        continue-on-error: true # Optional — allows deployment even if tests fail
-
-      - name: Build application
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-build
-          path: .next # ✅ for Next.js (React = build, Vite = dist)
-
-  deploy_job:
-    needs: build_and_test_job
-    runs-on: ubuntu-latest
-    name: Deploy to Azure Static Web Apps
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: app-build
-          path: .next
-
-      - name: Deploy to Azure
+      - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_GLACIER_02B211400 }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Enables PR comments, etc.
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
-
-          ###### Repository/Build Configurations ######
-          app_location: "/" # ✅ Root directory (adjust if your app lives in /src)
-          api_location: "" # No API folder unless you have one
-          output_location: ".next" # ✅ Next.js build output directory
-          ###### End of Configurations ######
+          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "/public" # App source code path
+          api_location: "api" # Api source code path - optional
+          output_location: "build-web" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
-
     steps:
       - name: Close Pull Request
+        id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZEALOUS_GLACIER_02B211400 }}
