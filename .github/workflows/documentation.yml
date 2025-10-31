@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20  # 👈 upgraded to Node.js 20 (Docusaurus requirement)
+          node-version: 20  
 
       - name: Install dependencies
         run: |
